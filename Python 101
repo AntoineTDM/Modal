@@ -1,0 +1,5 @@
+import numpy as np
+
+X = np.zeros(5)
+X[1]=2
+#vector should be (0,0,2,0,0)
