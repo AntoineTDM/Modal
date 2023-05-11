@@ -1,5 +1,5 @@
 import torch
-import wandb
+import wandb #Used to track metrics. Must create an account on wandb.com and input key to the terminal
 import hydra
 from tqdm import tqdm
 
