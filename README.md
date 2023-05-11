@@ -22,5 +22,6 @@ Plan d'action:
 
 
 Questions à poser demain:
+Comment sauver un model (ou ses weights) pour ne pas avoir à le relecharger / réentrainer à chaque fois?
 
 
