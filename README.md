@@ -1,4 +1,9 @@
 # Modal
+
+
+
+
+
 Tentative pour centraliser le code du projet final
 
 Question à résoudre: 
@@ -13,3 +18,9 @@ Plan d'action:
 4. Reprendre les étapes 1-3 en controlant la qualité des images rajoutées et en boostant le modèle. 
 5. Tester différents modèles ad hoc 
 6. Tenter de générer nous même des images 
+
+
+
+Questions à poser demain:
+
+
