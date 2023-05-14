@@ -41,3 +41,4 @@ class DataModule:
             shuffle=False,
             num_workers=self.num_workers,
         )
+

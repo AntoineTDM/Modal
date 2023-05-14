@@ -1,3 +1,3 @@
 _target_: models.resnet.ResNetFinetune
-num_classes: ${dataset.num_classes} #C'est 10 pour le moment
+num_classes: ${dataset.num_classes}
 frozen: True

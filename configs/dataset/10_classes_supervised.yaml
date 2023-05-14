@@ -1,8 +1,16 @@
 defaults:
   - train_transform: simple
   - test_transform: simple
+  - vanilla_transform: simple
+  - augment_transform1: simple
+  - augment_transform2: simple
+  - augment_transform3: simple
+  - augment_transform4: simple
+  - augment_transform5: simple
+
 num_classes: 10
 batch_size: 128
-num_workers: 8
+num_workers: 0
 train_path: ${data_dir}/train
 test_path: ${data_dir}/test
+unlabelled_path: ${data_dir}/unlabelled

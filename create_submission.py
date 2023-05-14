@@ -4,7 +4,7 @@ import os
 from PIL import Image
 import pandas as pd
 import torch
-
+from tqdm import tqdm
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -37,29 +37,49 @@ def create_submission(cfg):
         shuffle=False,
         num_workers=cfg.dataset.num_workers,
     )
-    # Load model and checkpoint
     model = hydra.utils.instantiate(cfg.model).to(device)
     checkpoint = torch.load(cfg.checkpoint_path)
     model.load_state_dict(checkpoint)
-    class_names = sorted(os.listdir(cfg.dataset.train_path))
-
-    # Create submission.csv
+    # class_names = sorted(os.listdir(cfg.dataset.train_path))
+    class_names = ["bat", "carbine", "Conestoga wagon", 'cupola', 'gosling', 'hammer', 'peahen', 'squash racket',
+                   'tragopan', 'zinfandel']
     submission = pd.DataFrame(columns=["id", "label"])
 
-    for i, batch in enumerate(test_loader):
+    for i, batch in tqdm(enumerate(test_loader),desc=f"Epoch"):
         images, image_names = batch
         images = images.to(device)
         preds = model(images)
         preds = preds.argmax(1)
         preds = [class_names[pred] for pred in preds.cpu().numpy()]
-        submission = pd.concat(
-            [
-                submission,
-                pd.DataFrame({"id": image_names, "label": preds}),
-            ]
-        )
-    submission.to_csv(f"{cfg.root_dir}/submission.csv", index=False)
+        submission = pd.concat([submission,pd.DataFrame({"id": image_names, "label": preds}),])
+    submission.to_csv(f"{cfg.root_dir}/V2/submission.csv", index=False)
 
 
 if __name__ == "__main__":
     create_submission()
+
+
+# @hydra.main(config_path="configs", config_name="config")
+# def create_submission(cfg):
+#     debugging = hydra.utils.instantiate(cfg.debugging)
+#     test_loader = debugging.test_dataloader()
+#
+#     # Load model and checkpoint
+#     model = hydra.utils.instantiate(cfg.model).to(device)
+#     checkpoint = torch.load(cfg.checkpoint_path)
+#     model.load_state_dict(checkpoint)
+#     # class_names = sorted(os.listdir(cfg.dataset.train_path))
+#     class_names = ["bat","carbine","Conestoga wagon",'cupola', 'gosling', 'hammer', 'peahen', 'squash racket', 'tragopan', 'zinfandel']
+#
+#
+#     for i, batch in enumerate(test_loader):
+#         print("batch",i)
+#         images, labels = batch
+#         images = images.to(device)
+#         preds = model(images)
+#         preds = preds.argmax(1)
+#         preds = [class_names[pred] for pred in preds.cpu().numpy()]
+#
+#
+# if __name__ == "__main__":
+#     create_submission()
