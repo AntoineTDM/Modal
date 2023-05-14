@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/antoinemillet/Documents/Baseline/train.py", line 10, in <module>
-    @hydra.main(config_path="configs", config_name="config")
-AttributeError: module 'hydra' has no attribute 'main'
