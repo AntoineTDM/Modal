@@ -5,13 +5,19 @@ defaults:
   - loss_fn: cross_entropy
 
 epochs: 6
-threshold: 0.5
+threshold: 0.3
 
 datamodule:
   _target_: data.datamodule.DataModule
   train_dataset_path: ${dataset.train_path}
+  unlabelled_dataset_path: ${dataset.unlabelled_path}
   train_transform: ${dataset.train_transform}
   val_transform: ${dataset.test_transform}
+  augment_transform1: ${dataset.augment_transform1}
+  augment_transform2: ${dataset.augment_transform2}
+  augment_transform3: ${dataset.augment_transform3}
+  augment_transform4: ${dataset.augment_transform4}
+  augment_transform5: ${dataset.augment_transform5}
   batch_size: ${dataset.batch_size}
   num_workers: ${dataset.num_workers}
 
@@ -22,24 +28,6 @@ debugging:
   batch_size: ${dataset.batch_size}
   num_workers: ${dataset.num_workers}
 
-custom:
-  _target_: data.custom.CustomDatasetWrapper
-  train_dataset_path: ${dataset.train_path}
-  train_transform: ${dataset.train_transform}
-  augment_transform1: ${dataset.augment_transform1}
-  augment_transform2: ${dataset.augment_transform2}
-  augment_transform3: ${dataset.augment_transform3}
-  augment_transform4: ${dataset.augment_transform4}
-  augment_transform5: ${dataset.augment_transform5}
-  batch_size: ${dataset.batch_size}
-  num_workers: ${dataset.num_workers}
-
-unlabelled:
-  _target_: data.unlabelled.DataModule
-  unlabelled_dataset_path: ${dataset.unlabelled_path}
-  train_transform: ${dataset.train_transform}
-  batch_size: ${dataset.batch_size}
-  num_workers: ${dataset.num_workers}
 
 data_dir: ${root_dir}/dataset
 root_dir:  ${hydra:runtime.cwd}

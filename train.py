@@ -13,27 +13,23 @@ def train(cfg):
     loss_fn = hydra.utils.instantiate(cfg.loss_fn)
     datamodule = hydra.utils.instantiate(cfg.datamodule)
     debugging = hydra.utils.instantiate(cfg.debugging)
-    custom = hydra.utils.instantiate(cfg.custom)
 
-    train_loader = datamodule.train_dataloader()
-    augmented_loader = custom.augmented_dataloader()
+    # train_loader = datamodule.train_dataloader()
     val_loader = datamodule.val_dataloader()
     test_loader = debugging.test_dataloader()
-
     print("initialization OK")
-    print("train_loader batch number:", len(train_loader))
-    print("augmented_loader batch number:", len(augmented_loader))
 
     for epoch in tqdm(range(cfg.epochs)):
+        model.train()
         epoch_loss = 0
         epoch_num_correct = 0
         num_samples = 0
-        for i, batch in enumerate(augmented_loader):
+        for i, batch in enumerate(datamodule.augmented_dataloader()):
             images, labels = batch
             images = images.to(device)
             labels = labels.to(device)
             preds = model(images)
-            loss = loss_fn(preds, labels)
+            loss = loss_fn(model(images), labels)
             logger.log({"loss": loss.detach().cpu().numpy()})
             optimizer.zero_grad()
             loss.backward()
@@ -53,80 +49,50 @@ def train(cfg):
                 "train_acc": epoch_acc,
             }
         )
+        # if epoch > -1:  # We need to wait for the model to be trained a bit
+        #     model.eval()
+        #     print("calling unlabelled data loader")
+        #     for i, unlabelled_images in enumerate(datamodule.unlabelled_dataloader()):
+        #         print("beginning predictions")
+        #         unlabelled_images = unlabelled_images.to(device)
+        #         probabilities = torch.nn.functional.softmax(model(unlabelled_images), dim=1)
+        #         predicted_labels = torch.max(probabilities, 1)
+        #         confidence_threshold = cfg.threshold
+        #         print("beginning threshold")
+        #         confident_mask = probabilities.max(dim=1)[0] > confidence_threshold
+        #         confident_images = unlabelled_images[confident_mask]
+        #         confident_labels = predicted_labels[confident_mask]
+        #         print("finished threshold, there are", confident_images.shape[0], "that passed")
+        #         if confident_images.shape[0] > 0:
+        #             # Add confident images to training set
+        #             print("addinf...")
+        #             datamodule.augmented_dataset += torch.utils.data.TensorDataset(
+        #                 confident_images, confident_labels)
+        #             print("done adding")
 
-        # This gives us a prediction score over the 150 original images, good for the threshold
-        epoch_loss = 0
-        epoch_num_correct = 0
-        num_samples = 0
-        confidence = 0
-        for i, batch in enumerate(test_loader):
-            images, labels = batch
-            images = images.to(device)
-            labels = labels.to(device)
-            preds = model(images)
-            preds = torch.nn.functional.softmax(preds, dim=1)
-            loss = loss_fn(preds, labels)
-            epoch_loss += loss.detach().cpu().numpy() * len(images)
-            epoch_num_correct += (
-                (preds.argmax(1) == labels).sum().detach().cpu().numpy()
-            )
-            # apply a threshold of 0.5 to the tensor
-            thresholded_preds = torch.where(preds > cfg.threshold, torch.ones_like(preds), torch.zeros_like(preds))
-            # print(thresholded_preds)
-            confidence += ((thresholded_preds.sum(dim=1) > 0).sum().item())
-            num_samples += len(images)
-            # print(preds.argmax(1))
-        epoch_loss /= num_samples
-        confidence /= num_samples
-        epoch_acc = epoch_num_correct / num_samples
-        print("test_acc", epoch_acc)
-        print("confidence", confidence)
-        logger.log(
-            {
-                "epoch": epoch,
-                "test_loss_epoch": epoch_loss,
-                "test_acc": epoch_acc,
-                "threshold confidence": confidence
-            }
-        )
-
-
-
-        # This gives us a prediction score over the 150 original images
-        epoch_loss = 0
-        epoch_num_correct = 0
-        num_samples = 0
-        confidence = 0
-        for i, batch in enumerate(test_loader):
-            images, labels = batch
-            images = images.to(device)
-            labels = labels.to(device)
-            preds = model(images)
-            preds = torch.nn.functional.softmax(preds, dim=1)
-            loss = loss_fn(preds, labels)
-            epoch_loss += loss.detach().cpu().numpy() * len(images)
-            epoch_num_correct += (
-                (preds.argmax(1) == labels).sum().detach().cpu().numpy()
-            )
-            # apply a threshold of 0.5 to the tensor
-            thresholded_preds = torch.where(preds > cfg.threshold, torch.ones_like(preds),torch.zeros_like(preds))
-            # print(thresholded_preds)
-            confidence += ((thresholded_preds.sum(dim=1) > 0).sum().item())
-            num_samples += len(images)
-            # print(preds.argmax(1))
-        epoch_loss /= num_samples
-        confidence /= num_samples
-        epoch_acc = epoch_num_correct / num_samples
-        print("test_acc", epoch_acc)
-        print("confidence",confidence)
-        logger.log(
-            {
-                "epoch": epoch,
-                "test_loss_epoch": epoch_loss,
-                "test_acc": epoch_acc,
-                "threshold confidence": confidence
-            }
-        )
+        # # This gives us a prediction score over the 150 original images, good for estimating the best threshold
+        # epoch_num_correct = 0
+        # num_samples = 0
+        # confidence = 0
+        # for i, batch in enumerate(test_loader):
+        #     images, labels = batch
+        #     images = images.to(device)
+        #     labels = labels.to(device)
+        #     preds = torch.nn.functional.softmax(model(images), dim=1)
+        #     epoch_num_correct += ((preds.argmax(1) == labels).sum().detach().cpu().numpy())
+        #     thresholded_preds = torch.where(preds > cfg.threshold, torch.ones_like(preds), torch.zeros_like(preds))
+        #     confidence += ((thresholded_preds.sum(dim=1) > 0).sum().item())
+        #     num_samples += len(images)
+        # confidence /= num_samples
+        # epoch_acc = epoch_num_correct / num_samples
+        # print("test_acc", epoch_acc)
+        # logger.log(
+        #     {
+        #         "epoch": epoch,
+        #         "test_acc": epoch_acc,
+        #         "threshold confidence": confidence
+        #     }
+        # )
 
         epoch_loss = 0
         epoch_num_correct = 0
